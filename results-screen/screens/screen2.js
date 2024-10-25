@@ -9,22 +9,28 @@ export default function renderScreen2() {
         <ul id="PlayerEnd"></ul>
     `;
 
-	// Emitir evento para revisar si hay un ganador
 	socket.emit('checkWinner');
 
 	// Listener para mostrar al ganador y la lista de jugadores
 	socket.on('ScreenWinner', (data) => {
 		const { Winner, players } = data;
 
-		// Mostrar el mensaje del ganador
 		document.getElementById('winnerMessage').textContent = `¡El ganador es ${Winner}!`;
-		PlayersRender(players);
+		// Ordenar solo aquí por puntaje de mayor a menor
+		PlayersRender(players, true);
 	});
 
-	// Función para renderizar la lista de jugadores en pantalla
-	function PlayersRender(players) {
-		// Ordenar por puntaje de mayor a menor
-		players.sort((a, b) => b.score - a.score);
+	// Listener para actualizar la lista cuando cambian los puntajes
+	socket.on('updateScore', (data) => {
+		const { players } = data;
+		PlayersRender(players, true); // Muestra los jugadores ordenados por puntaje
+	});
+
+	function PlayersRender(players, sortByScore = false) {
+		// Si sortByScore es verdadero, ordenamos por puntaje, de lo contrario no
+		if (sortByScore) {
+			players.sort((a, b) => b.score - a.score);
+		}
 
 		let playerList = '';
 		players.forEach((player, index) => {
@@ -42,6 +48,6 @@ export default function renderScreen2() {
 	// Listener para cuando se recibe la lista de jugadores ordenada alfabéticamente
 	socket.on('UpdateListPlayer', (data) => {
 		const { players } = data;
-		PlayersRender(players);
+		PlayersRender(players, false);
 	});
 }
